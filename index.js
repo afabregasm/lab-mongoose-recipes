@@ -1,68 +1,67 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
+const Recipe = require("./models/Recipe.model");
+const data = require("./data");
 
-// Import of the model Recipe from './models/Recipe.model.js'
-const Recipe = require('./models/Recipe.model');
-// Import of the data from './data.json'
-const data = require('./data');
+const MONGODB_URI = "mongodb://localhost:27017/recipe-app";
 
-const MONGODB_URI = 'mongodb://localhost:27017/recipe-app';
-
-// Connection to the database "recipe-app"
 mongoose
   .connect(MONGODB_URI)
-  .then(x => {
+  .then((x) => {
     console.log(`Connected to the database: "${x.connection.name}"`);
-    // Before adding any recipes to the database, let's remove all existing ones
-    return Recipe.deleteMany()
+    return Recipe.deleteMany();
   })
-
   .then(() => {
     return Recipe.create({
-      title: 'Spaghetti Carbonara',
-      cuisine: 'Italian'
-    })
+      title: "Spaghetti Carbonara",
+      level: "Amateur Chef",
+      ingredients: [
+        "Spaghetti",
+        "Bacon",
+        "Cooking Cream",
+        "Parmesan",
+        "White Pepper",
+        "Salt",
+      ],
+      cuisine: "Italian",
+      dishType: "main_course",
+      image:
+        "https://images.immediate.co.uk/production/volatile/sites/30/2020/08/recipe-image-legacy-id-1001491_11-2e0fa5c.jpg?quality=90&webp=true&resize=440,400",
+      duration: 35,
+      creator: "Chef Andrea",
+    });
   })
-
-  .then((oneRecipe) => {
-    console.log(oneRecipe.title);
+  .then((createdRecipe) => {
+    console.log(`${createdRecipe.title}'s recipe created successfully!`);
   })
-
   .then(() => {
     return Recipe.insertMany(data);
   })
-
-  .then((allRecipes) => {
-    let allRecipesTitle = allRecipes.map((recipeTitle) => {
-      return recipeTitle.title;
-    });
-    console.log(allRecipesTitle);
+  .then((createdRecipes) => {
+    console.log(
+      `${createdRecipes.length} recipes created successfully:`,
+      createdRecipes.map((recipe) => recipe.title)
+    );
   })
-
   .then(() => {
     return Recipe.findOneAndUpdate(
-      {title: 'Rigatoni alla Genovese'},
-      {duration: 100},
-      {new: true}
-      );
+      { title: "Rigatoni alla Genovese" },
+      { duration: 100 },
+      { new: true }
+    );
   })
-
+  .then((modifiedRecipe) => {
+    console.log(`${modifiedRecipe.title}'s duration modified successfully!`);
+  })
   .then(() => {
-    console.log('Modified success!');
+    return Recipe.deleteOne({ title: "Carrot Cake" });
   })
-
+  .then((deletedRecipe) => {
+    console.log(`${deletedRecipe.deletedCount} recipe deleted successfully!`);
+  })
   .then(() => {
-    return Recipe.deleteOne(
-      {title: 'Carrot Cake'});
+    mongoose.connection.close();
+    console.log("Database closed successfully!");
   })
-
-  .then(() => {
-    console.log('Deletion success!');
-  })
-
-  .then (() => {
-    mongoose.connection.close()
-  })
-
-  .catch(error => {
-    console.error('Error connecting to the database', error);
+  .catch((err) => {
+    console.log("Error connecting to the database", err);
   });
