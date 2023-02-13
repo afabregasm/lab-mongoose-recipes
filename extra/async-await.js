@@ -1,17 +1,17 @@
 const mongoose = require("mongoose");
-const Recipe = require("./models/Recipe.model");
-const data = require("./data");
+const Recipe = require("../models/Recipe.model");
+const data = require("../data");
 
-const MONGODB_URI = "mongodb://localhost:27017/recipe-app";
+const MONGODB_URI = "mongodb://localhost:27017/recipe-app-async-await";
 
-mongoose
-  .connect(MONGODB_URI)
-  .then((x) => {
+async function updateRecipesDB() {
+  try {
+    const x = await mongoose.connect(MONGODB_URI);
     console.log(`Connected to the database: "${x.connection.name}"`);
-    return Recipe.deleteMany();
-  })
-  .then(() => {
-    return Recipe.create({
+
+    await Recipe.deleteMany();
+
+    const createdRecipe = await Recipe.create({
       title: "Spaghetti Carbonara",
       level: "Amateur Chef",
       ingredients: [
@@ -29,39 +29,29 @@ mongoose
       duration: 35,
       creator: "Chef Andrea",
     });
-  })
-  .then((createdRecipe) => {
     console.log(`${createdRecipe.title}'s recipe created successfully!`);
-  })
-  .then(() => {
-    return Recipe.insertMany(data);
-  })
-  .then((createdRecipes) => {
+
+    const createdRecipes = await Recipe.insertMany(data);
     console.log(
       `${createdRecipes.length} recipes created successfully:`,
       createdRecipes.map((recipe) => recipe.title)
     );
-  })
-  .then(() => {
-    return Recipe.findOneAndUpdate(
+
+    const modifiedRecipe = await Recipe.findOneAndUpdate(
       { title: "Rigatoni alla Genovese" },
       { duration: 100 },
       { new: true }
     );
-  })
-  .then((modifiedRecipe) => {
     console.log(`${modifiedRecipe.title}'s duration modified successfully!`);
-  })
-  .then(() => {
-    return Recipe.deleteOne({ title: "Carrot Cake" });
-  })
-  .then((deletedRecipe) => {
+
+    const deletedRecipe = await Recipe.deleteOne({ title: "Carrot Cake" });
     console.log(`${deletedRecipe.deletedCount} recipe deleted successfully!`);
-  })
-  .then(() => {
-    mongoose.connection.close();
+
+    await mongoose.connection.close();
     console.log("Database closed successfully!");
-  })
-  .catch((err) => {
+  } catch (err) {
     console.log("Error: ", err);
-  });
+  }
+}
+
+updateRecipesDB();
